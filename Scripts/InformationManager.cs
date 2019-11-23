@@ -91,7 +91,7 @@ public class InformationManager : MonoBehaviour
             GUI.Label(new Rect(5, 40, 145, 20), "Количество особей:");
             manager.scaleOfGeneration = Convert.ToInt32(GUI.TextField(new Rect(150, 40, 50, 20),manager.scaleOfGeneration.ToString(), 4));
             GUI.Label(new Rect(5, 60, 145, 20), "Период доген.(мс):");
-            generator.range = Convert.ToInt32(GUI.TextField(new Rect(150, 60, 50, 20),manager.escapeCheckPeriod.ToString(), 4));
+            manager.escapeCheckPeriod = Convert.ToInt32(GUI.TextField(new Rect(150, 60, 50, 20),manager.escapeCheckPeriod.ToString(), 4));
         }
         else if (windowId == 2)
         {
@@ -117,7 +117,7 @@ public class InformationManager : MonoBehaviour
             manager.mutationRate  = GUI.HorizontalSlider(new Rect(4, 183, 200, 20), manager.mutationRate, 0.0f, 1.0f);
             // Генерация препятствий в каждом поколении - переключатель
             GUI.Label(new Rect(5, 200, 145, 20), "Случ. преп. кажд. пок.: ");
-            manager.generateObsEvryGen = GUI.Toggle(new Rect(150, 200, 35, 35), manager.generateObsEvryGen, "");
+            manager.generateObsNextGen = GUI.Toggle(new Rect(150, 200, 35, 35), manager.generateObsNextGen, "");
         }
         
     }
@@ -149,7 +149,7 @@ public class InformationManager : MonoBehaviour
 
         if (Physics.Raycast(transform.position, Camera.main.ScreenPointToRay(Input.mousePosition).direction, out hit, Mathf.Infinity, 512))
         {
-            pos = dragOrigin - hit.point;
+            pos = transform.position + dragOrigin - hit.point;
             transform.position = Vector3.SmoothDamp(transform.position,
                                                 new Vector3 (pos.x, transform.position.y, pos.z),
                                                 ref util, 0.05f, Mathf.Infinity, Time.unscaledDeltaTime);

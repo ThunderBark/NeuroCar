@@ -3624,7 +3624,7 @@ MonoBehaviour:
   maxDurationOfGen: 90
   scaleOfGeneration: 50
   speedOfTime: 0
-  escapeCheckPeriod: 2
+  escapeCheckPeriod: 1
   sampleCar: {fileID: 7647923837072941135, guid: 9f68fae0d075dfa43b7a332e5834b83a,
     type: 3}
   winGenesSpreadRatio: 50
@@ -3633,7 +3633,7 @@ MonoBehaviour:
   minSurviveProb: 0
   mutationChance: 2
   mutationRate: 1
-  generateObsEvryGen: 0
+  generateObsNextGen: 0
   distanceImportance: 1
   rotationImportance: 0
   dumbBrainCheckTime: 20
@@ -3657,7 +3657,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   range: 50
-  density: 0.02
+  density: 0.045
   deviationPercent: 0
   obstacleParent: {fileID: 1901388054}
   minDimension: 1
