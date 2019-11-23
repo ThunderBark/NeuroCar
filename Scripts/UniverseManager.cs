@@ -39,6 +39,7 @@ public class UniverseManager : MonoBehaviour
 	public GameObject bigBrother;
 	public float bigBrotherSpeed;
 	public bool freeCam;
+	private Vector3 dragOrigin;
 	
 	[Header("Отладка")]
 	public float startOfLastGeneration;
@@ -266,9 +267,9 @@ public class UniverseManager : MonoBehaviour
 			CheckSimulationEscape();
 		}
 		
+		BigBrotherManager();
 		CalculateScore();
 		
-		BigBrotherManager();
 		Time.timeScale = speedOfTime;
     }
 	
@@ -398,20 +399,5 @@ public class UniverseManager : MonoBehaviour
 															ref util,
 															bigBrotherSpeed);
 		}
-		/*else
-		{
-			if (Input.GetMouseButtonDown(0))
-			{
-				dragOrigin = Input.mousePosition;
-				return;
-			}
-	
-			if (!Input.GetMouseButton(0)) return;
-	
-			Vector3 pos = Camera.main.ScreenToViewportPoint(Input.mousePosition - dragOrigin);
-			Vector3 move = new Vector3(pos.x * dragSpeed, 0, pos.y * dragSpeed);
-	
-			bigBrother.transform.Translate(move, Space.World);  
-		}*/
 	}
 }

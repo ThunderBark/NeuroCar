@@ -141,7 +141,11 @@ public class InformationManager : MonoBehaviour
             return;
         }
 
-        if (!Input.GetMouseButton(2)) return;
+        if (!Input.GetMouseButton(2)) 
+        {
+            pos = dragOrigin;
+            return;
+        }
 
         if (Physics.Raycast(transform.position, Camera.main.ScreenPointToRay(Input.mousePosition).direction, out hit, Mathf.Infinity, 512))
         {
@@ -150,7 +154,5 @@ public class InformationManager : MonoBehaviour
                                                 new Vector3 (pos.x, transform.position.y, pos.z),
                                                 ref util, 0.05f, Mathf.Infinity, Time.unscaledDeltaTime);
         }
-
-        //transform.Translate(move, Space.World); 
     }
 }
