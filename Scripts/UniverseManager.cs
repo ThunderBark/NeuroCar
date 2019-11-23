@@ -27,7 +27,7 @@ public class UniverseManager : MonoBehaviour
 	public float minSurviveProb;
 	public float mutationChance;
 	public float mutationRate;
-	public bool generateObsEvryGen;
+	public bool generateObsNextGen;
 	
 	[Header("Настройки расчета приспособленности")]
 	public float distanceImportance;
@@ -137,11 +137,12 @@ public class UniverseManager : MonoBehaviour
 		NaturalSelection();
 		
 		// Респавн препятствий
-		if (generateObsEvryGen)
+		if (generateObsNextGen)
 		{
 			sectorPosMap.Clear();
 			obsGenerator.Start();
 			sectorPosMap.Add(Vector3.zero);
+			generateObsNextGen = false;
 		}
 
 		// Сброс всех машин
