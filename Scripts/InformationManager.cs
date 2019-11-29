@@ -59,7 +59,8 @@ public class InformationManager : MonoBehaviour
 
     void CheckKeys()
     {
-
+        if (Input.GetKey("escape"))
+            Application.Quit();
     }
 
     void WindowManager(int windowId)

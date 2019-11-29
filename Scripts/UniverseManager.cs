@@ -1,6 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using static System.Exception;
 using UnityEngine;
 
 public class UniverseManager : MonoBehaviour
@@ -45,6 +47,9 @@ public class UniverseManager : MonoBehaviour
 	public float startOfLastGeneration;
 	public int[] scoreList;
 	public float scoreCheckPeriod;
+	public int t,t1;
+	public string str;
+	public string tstr;
 	
 	
 	// Внутренние настройки
@@ -77,7 +82,7 @@ public class UniverseManager : MonoBehaviour
 		// Определение выживших по определенному распределению
 		int parentCount = 0;
 		
-		SortCarsByScore();
+		car = SortCarsByScore(car);
 		
 		gain = avgPrevGenScore;
 		avgPrevGenScore = 0;
@@ -98,7 +103,7 @@ public class UniverseManager : MonoBehaviour
 		gain = avgPrevGenScore - gain;
 		bestPrevGenScore = scoreList[0];
 		
-		SortCarsByScore();
+		car = SortCarsByScore(car);
 		
 		// Кроссоверинг и мутация
 		int numOfConnections;
@@ -327,13 +332,14 @@ public class UniverseManager : MonoBehaviour
 		return false;
 	}
 	
-	void SortCarsByScore()
+	List<GameObject> SortCarsByScore(List<GameObject> cars)
 	{
-		car = car.OrderByDescending(GameObject => GameObject.transform.GetChild(3).GetComponent<Brain>().SCORE).ToList();
+		cars = cars.OrderByDescending(GameObject => GameObject.transform.GetChild(3).GetComponent<Brain>().SCORE).ToList();
 		for (int i = 0; i < scaleOfGeneration; i++)
 		{
-			brain[i] = car[i].transform.GetChild(3).GetComponent<Brain>();
+			brain[i] = cars[i].transform.GetChild(3).GetComponent<Brain>();
 		}
+		return cars;
 	}
 	
 	void CalculateScore()
@@ -399,6 +405,65 @@ public class UniverseManager : MonoBehaviour
 															new Vector3(pos.x, bigBrother.transform.position.y, pos.z),
 															ref util,
 															bigBrotherSpeed);
+		}
+	}
+
+	public void SaveBestBrain()
+	{
+		brain[0].Upload_Brain("./BestBrain.txt");
+	}
+
+	public void ImportBrain()
+	{
+
+		StreamReader rd = new StreamReader("./BestBrain.txt");
+		str = rd.ReadLine();
+		tstr = str.Substring(str.LastIndexOf(':')+2);
+		try
+		{
+			t = System.Convert.ToInt32(tstr);
+			tstr = str.Substring(str.IndexOf(':')+2, (str.IndexOf(',') - str.IndexOf(':')-2));
+			t1 = System.Convert.ToInt32(tstr);
+		}
+		catch{}
+
+		float[][][] w = new float[t][][];
+		float[][][] b = new float[t][][];
+		for (int i = 0; i < t; i++)
+		{
+			str = rd.ReadLine();
+			tstr = str.Substring(str.LastIndexOf(':')+2);
+			int t2 = System.Convert.ToInt32(tstr);
+			w[i] = new float[t2][];
+			b[i] = new float[t2][];
+			for (int j = 0; j < t2; j++)
+			{
+				w[i][j] = new float[t1];
+				b[i][j] = new float[t1];
+			}
+			t1 = t2;
+		}
+
+		for (int i = 0; i < w.Length; i++)
+		{
+			str = rd.ReadLine();
+			for (int j = 0; j < w[i].Length; j++)
+			{
+				str = rd.ReadLine();
+				str = rd.ReadLine();
+				string[] lol = str.Split(new char[] {' '});
+				for (int k = 0; k < w[i][j].Length; k++)
+				{
+					w[i][j][k] = (float)System.Convert.ToDouble(lol[k+1].Split(';')[0].Trim());
+					b[i][j][k] = (float)System.Convert.ToDouble(lol[k+1].Split(';')[1].Trim());
+				}
+			}
+		}
+
+		for (int i = 0; i < brain.Count(); i++)
+		{
+			brain[i].weights = w;
+			brain[i].biases = b;
 		}
 	}
 }

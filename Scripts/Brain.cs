@@ -158,7 +158,7 @@ public class Brain : MonoBehaviour
 	public void Upload_Brain(string path)
 	{
         // string path = "C:\\Users\\User\\Desktop\\WeightsAndBiases.txt";
-		StreamWriter wr = new StreamWriter(path, true);
+		StreamWriter wr = new StreamWriter(path, false);
 		
 		wr.WriteLine("Кол-во входов: {0}, Кол-во слоев: {1}", numOfEyes, numOfLayers.Count);
 		for (int i = 0; i < numOfLayers.Count; i++)
@@ -168,15 +168,15 @@ public class Brain : MonoBehaviour
 		int numOfConnections = numOfEyes;
 		for (int i = 0; i < numOfLayers.Count; i++)
 		{
-			wr.WriteLine("\n Слой {0}", i+1);
+			wr.WriteLine("Слой {0}", i+1);
 			for (int j = 0; j < numOfLayers[i]; j++)
 			{
-				wr.WriteLine(" Нейрон {0} \n", j+1);
+				wr.WriteLine("Нейрон {0}", j+1);
 				for (int k = 0; k < numOfConnections; k++)
 				{
-					wr.Write(" ({0};{1})", weights[i][j][k], biases[i][j][k]);
+					wr.Write(" {0};{1}", weights[i][j][k], biases[i][j][k]);
 				}
-				wr.WriteLine("\n");
+				wr.WriteLine("");
 			}
 			if (i < numOfLayers.Count - 1){
 				numOfConnections = numOfLayers[i];
