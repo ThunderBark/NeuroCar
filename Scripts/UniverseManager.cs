@@ -227,6 +227,25 @@ public class UniverseManager : MonoBehaviour
 		}
 	}
 	
+	 public void BigBang()
+	{
+		// Сброс всех машин
+		ResetCars();		
+
+		sectorPosMap.Clear();
+		obsGenerator.Start();
+		sectorPosMap.Add(Vector3.zero);
+		generateObsNextGen = false;
+
+		bestPrevGenScore = 0;
+		gain = 0;
+		avgPrevGenScore = 0;
+		bestPrevGenScore = 0;
+		
+		generationNumber = 0;
+		startOfLastGeneration = Time.time;
+		Time.timeScale = 0;
+	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////
     void Start()
     {
@@ -258,6 +277,7 @@ public class UniverseManager : MonoBehaviour
 			prevRot[i] = Vector3.zero;
 			car.Add((GameObject)Instantiate(sampleCar, Vector3.up, Quaternion.identity));
 			brain[i] = car[i].transform.GetChild(3).GetComponent<Brain>();
+			brain[i].BrainInit();
 		}
     }
 
@@ -415,7 +435,6 @@ public class UniverseManager : MonoBehaviour
 
 	public void ImportBrain()
 	{
-
 		StreamReader rd = new StreamReader("./BestBrain.txt");
 		str = rd.ReadLine();
 		tstr = str.Substring(str.LastIndexOf(':')+2);

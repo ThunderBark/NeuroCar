@@ -81,7 +81,7 @@ public class Brain : MonoBehaviour
 	
 	///////////////////////////
 	// Инициализация мозгов
-	void Brain_init()
+	 public void BrainInit()
 	{		
 		muscles = this.GetComponent<Muscles>();
 		weights = new float[numOfLayers.Count][][];
@@ -196,7 +196,7 @@ public class Brain : MonoBehaviour
     {
 		// Инициализация глаз и мозгов
 		PingInit();
-		Brain_init();
+		//BrainInit();
     }
 	
     void FixedUpdate()

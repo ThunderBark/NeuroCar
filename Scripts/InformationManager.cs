@@ -34,7 +34,7 @@ public class InformationManager : MonoBehaviour
 
         if (GUI.Button(new Rect(130, 10, 40, 40), restart))
         {
-            Scene scene = SceneManager.GetActiveScene(); SceneManager.LoadScene(scene.name);
+            manager.BigBang();
         }
         if (GUI.Button(new Rect(180, 10, 40, 40), "CAM"))
             manager.freeCam = !manager.freeCam;
