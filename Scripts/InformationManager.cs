@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.IO;
 using UnityEngine;
 using UnityEditor;
 using UnityEngine.SceneManagement;
@@ -13,6 +14,7 @@ public class InformationManager : MonoBehaviour
 
     [Header("Элементы ПИ")]
     public Texture restart;
+    public Texture importBrain;
 	
 	private GUIStyle style;
 
@@ -20,6 +22,7 @@ public class InformationManager : MonoBehaviour
     public float dragSpeed = 2;
     public Vector3 dragOrigin;
     public Vector3 mouse;
+    StreamWriter stat;
 	
     void Start()
     {
@@ -33,10 +36,10 @@ public class InformationManager : MonoBehaviour
         GUI.Box(new Rect(18, 20, 100, 20), "Поколение " + manager.generationNumber);
 
         if (GUI.Button(new Rect(130, 10, 40, 40), restart))
-        {
             manager.BigBang();
-        }
-        if (GUI.Button(new Rect(180, 10, 40, 40), "CAM"))
+        if (GUI.Button(new Rect(180, 10, 40, 40), importBrain))
+            manager.BigBang(true);
+        if (GUI.Button(new Rect(230, 10, 40, 40), "CAM"))
             manager.freeCam = !manager.freeCam;
 
         // Блок настроек генераций препятствий
@@ -155,5 +158,33 @@ public class InformationManager : MonoBehaviour
                                                 new Vector3 (pos.x, transform.position.y, pos.z),
                                                 ref util, 0.05f, Mathf.Infinity, Time.unscaledDeltaTime);
         }
+    }
+
+    public string StatInit()
+    {
+        /*
+            Желательно добавить инициализацию окон со статистикой в этом месте
+        */
+        string time = DateTime.Now.ToString("HHmmss");
+        string date = DateTime.Now.ToString("ddMMyyyy");
+		string statPath = "./" + date + "_" + time  + "_Summary.txt";
+        stat = new StreamWriter(statPath, false);
+        stat.WriteLine("Generation bestFit avgFit fitGain");
+        stat.Close();
+        return statPath;
+    }
+
+    public void StatWrite(string statPath, int genNum, int bestFit, int avgFit, int fitGain)
+    {
+        /*
+            В этом месте добавить функционал отображения графиков на экране
+        */
+		stat = new StreamWriter(statPath, true);
+        stat.Write(genNum.ToString() + " ");
+        stat.Write(bestFit.ToString() + " ");
+        stat.Write(avgFit.ToString() + " ");
+        stat.Write(fitGain.ToString() + " ");
+        stat.Write('\n');
+        stat.Close();
     }
 }

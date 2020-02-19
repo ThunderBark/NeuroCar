@@ -13,6 +13,10 @@ public class UniverseManager : MonoBehaviour
 	public int bestPrevGenScore;
 	public int avgPrevGenScore;
 	public int gain;
+
+	// Блок переменных для записи статистики
+	InformationManager infoManager;
+	string statPath;
 	
 	[Header("Основные параметры")]
 	public float maxDurationOfGen;
@@ -103,6 +107,10 @@ public class UniverseManager : MonoBehaviour
 		gain = avgPrevGenScore - gain;
 		bestPrevGenScore = scoreList[0];
 		
+		// Запись статистики
+		infoManager.StatWrite(statPath, generationNumber, bestPrevGenScore,
+							avgPrevGenScore, gain);
+
 		car = SortCarsByScore(car);
 		
 		// Кроссоверинг и мутация
@@ -136,7 +144,7 @@ public class UniverseManager : MonoBehaviour
 	void StartNextGeneration()
 	{
 		// Сортировка бесполезных мозгов
-		CheckUselessBrains();
+		//CheckUselessBrains();
 		
 		// Процедура естественного отбора и размножения
 		NaturalSelection();
@@ -227,24 +235,38 @@ public class UniverseManager : MonoBehaviour
 		}
 	}
 	
-	 public void BigBang()
+	 public void BigBang(bool isBrainLoad = false)
 	{
-		// Сброс всех машин
-		ResetCars();		
+		// Сброс положений машинок
+		ResetCars();
 
+		speedOfTime = 0;
+		Time.timeScale = 0;
+
+		// Если данный метод вызывается для загрузки мозга - загрузить его
+		// иначе заново инициализировать мозги
+		if (isBrainLoad)
+			ImportBrain();
+		else		
+		{
+			for (int i = 0; i < scaleOfGeneration; i++)
+				brain[i].BrainInit();
+		}
+
+		// Очистка карты
 		sectorPosMap.Clear();
 		obsGenerator.Start();
 		sectorPosMap.Add(Vector3.zero);
 		generateObsNextGen = false;
-
+		// Сброс статистики
 		bestPrevGenScore = 0;
 		gain = 0;
 		avgPrevGenScore = 0;
 		bestPrevGenScore = 0;
-		
 		generationNumber = 0;
+		statPath = infoManager.StatInit();
+		// Восстановление времени
 		startOfLastGeneration = Time.time;
-		Time.timeScale = 0;
 	}
 	//////////////////////////////////////////////////////////////////////////////////////////////////
     void Start()
@@ -252,6 +274,10 @@ public class UniverseManager : MonoBehaviour
 		// Инициализация
 		obsGenerator = this.GetComponent<ObstacleGenerator>();
 		scoreList = new int[scaleOfGeneration];
+		infoManager = bigBrother.GetComponent<InformationManager>();
+
+		// Инициализация записи статис
+		statPath = infoManager.StatInit();
 		
 		// Начальный спаун препятствий
 		sectorPosMap = new List<Vector3>();
@@ -309,7 +335,7 @@ public class UniverseManager : MonoBehaviour
 	bool isSurvived(int i, int count, float min, float max)
 	{
 		float rand = Random.Range(0.0f, 100.0f);
-		if ((i*(min-max)/count + max) > rand)
+		if (rand < (i*(min-max)/count + max))
 			return true;
 		return false;
 	}
@@ -379,7 +405,7 @@ public class UniverseManager : MonoBehaviour
 					maxRadVectM[i] = radVectM[i];
 				
 				int score = (int)(maxRadVectM[i]*distanceImportance) + (int)(fullRotats[i]*rotationImportance);
-				if (Time.time - startOfLastGeneration > dumbBrainCheckTime ? score > minScore : true)
+				if ((Time.time - startOfLastGeneration > dumbBrainCheckTime) ? score > minScore : true)
 					tHull.gameObject.GetComponent<Brain>().SCORE = score;
 				else
 					tHull.gameObject.GetComponent<Brain>().isDead = true;
@@ -479,7 +505,7 @@ public class UniverseManager : MonoBehaviour
 			}
 		}
 
-		for (int i = 0; i < brain.Count(); i++)
+		for (int i = 0; i < (brain.Count() > 3 ? 3:brain.Count()); i++)
 		{
 			brain[i].weights = w;
 			brain[i].biases = b;

@@ -31,6 +31,7 @@ public class Brain : MonoBehaviour
 	[Header("Отладка")]
 	public float prevTime;
 	public float turnCheck;
+	public float turn;
 	public HitInfo[] hitInfos;
 	
 	// Параметры пингов
@@ -81,13 +82,13 @@ public class Brain : MonoBehaviour
 	
 	///////////////////////////
 	// Инициализация мозгов
-	 public void BrainInit()
+	public void BrainInit()
 	{		
 		muscles = this.GetComponent<Muscles>();
 		weights = new float[numOfLayers.Count][][];
 		biases = new float[numOfLayers.Count][][];
 		
-		int numOfConnections = numOfEyes;
+		int numOfConnections = numOfEyes + 1;
 		for (int i = 0; i < numOfLayers.Count; i++)
 		{
 			weights[i] = new float[numOfLayers[i]][];
@@ -122,9 +123,11 @@ public class Brain : MonoBehaviour
 		{
 			x[i] = hitInfos[i].hitDistance/sightRange;
 		}
-		
+		x[numOfEyes] = Vector3.SignedAngle(transform.position, Vector3.forward, Vector3.up)/180f;
+		turn = x[numOfEyes];
+
 		// Расчет нейронной сети
-		int numOfConnections = numOfEyes;
+		int numOfConnections = weights[0][0].Length;
 		for (int i = 0; i < numOfLayers.Count; i++)
 		{
 			for(int j = 0; j < numOfLayers[i]; j++)
@@ -160,12 +163,12 @@ public class Brain : MonoBehaviour
         // string path = "C:\\Users\\User\\Desktop\\WeightsAndBiases.txt";
 		StreamWriter wr = new StreamWriter(path, false);
 		
-		wr.WriteLine("Кол-во входов: {0}, Кол-во слоев: {1}", numOfEyes, numOfLayers.Count);
+		wr.WriteLine("Кол-во входов: {0}, Кол-во слоев: {1}", numOfEyes + 1, numOfLayers.Count);
 		for (int i = 0; i < numOfLayers.Count; i++)
 		{
 			wr.WriteLine("Кол-во нейронов в слое {0}: {1} ", i+1, numOfLayers[i]);
 		}
-		int numOfConnections = numOfEyes;
+		int numOfConnections = numOfEyes + 1;
 		for (int i = 0; i < numOfLayers.Count; i++)
 		{
 			wr.WriteLine("Слой {0}", i+1);
@@ -224,4 +227,3 @@ public class HitInfo {
     public float hitDistance;
     public bool HIT;
 }
-
