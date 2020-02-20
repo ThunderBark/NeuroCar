@@ -164,10 +164,14 @@ public class InformationManager : MonoBehaviour
     {
         /*
             Желательно добавить инициализацию окон со статистикой в этом месте
+        //////////////
+            Также желательно поменять директорию, куда сохраняются логи
         */
         string time = DateTime.Now.ToString("HHmmss");
         string date = DateTime.Now.ToString("ddMMyyyy");
-		string statPath = "./" + date + "_" + time  + "_Summary.txt";
+        if (!Directory.Exists("./Logs/"))
+            Directory.CreateDirectory("./Logs/");
+		string statPath = "./Logs/" + date + "_" + time  + "_log.txt";
         stat = new StreamWriter(statPath, false);
         stat.WriteLine("Generation bestFit avgFit fitGain");
         stat.Close();

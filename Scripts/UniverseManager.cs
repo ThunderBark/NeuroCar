@@ -276,7 +276,7 @@ public class UniverseManager : MonoBehaviour
 		scoreList = new int[scaleOfGeneration];
 		infoManager = bigBrother.GetComponent<InformationManager>();
 
-		// Инициализация записи статис
+		// Инициализация записи статистики
 		statPath = infoManager.StatInit();
 		
 		// Начальный спаун препятствий
@@ -456,7 +456,8 @@ public class UniverseManager : MonoBehaviour
 
 	public void SaveBestBrain()
 	{
-		brain[0].Upload_Brain("./BestBrain.txt");
+		string path = statPath.Remove(18) + "BestBrain.txt";//"_log.txt";
+		brain[0].Upload_Brain(path/*"./BestBrain.txt"*/);
 	}
 
 	public void ImportBrain()

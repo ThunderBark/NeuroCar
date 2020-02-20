@@ -6,6 +6,7 @@ using UnityEngine;
 
 public class Brain : MonoBehaviour
 {
+	public GameObject target;
 	public bool isDead;
 	public int SCORE;
 	
