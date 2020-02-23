@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class Brain : MonoBehaviour
 {
-	public GameObject target;
+	GameObject target;
 	public bool isDead;
 	public int SCORE;
 	
@@ -86,6 +86,7 @@ public class Brain : MonoBehaviour
 	public void BrainInit()
 	{		
 		muscles = this.GetComponent<Muscles>();
+		target = GameObject.Find("Target");
 		weights = new float[numOfLayers.Count][][];
 		biases = new float[numOfLayers.Count][][];
 		
@@ -120,11 +121,14 @@ public class Brain : MonoBehaviour
 		
 		float[] x = new float[maxNeuronCnt];
 		float[] y = new float[maxNeuronCnt];
+		// Получение значений дальностей
 		for (int i = 0; i < numOfEyes; i++)
 		{
 			x[i] = hitInfos[i].hitDistance/sightRange;
 		}
-		x[numOfEyes] = Vector3.SignedAngle(transform.position, Vector3.forward, Vector3.up)/180f;
+		// Получение значения угла поворота относительно вектора до пункта назначения
+		Vector3 carToTarVect = target.GetComponent<Transform>().position - transform.position;
+		x[numOfEyes] = Vector3.SignedAngle(carToTarVect, Vector3.forward, Vector3.up)/180f;
 		turn = x[numOfEyes];
 
 		// Расчет нейронной сети

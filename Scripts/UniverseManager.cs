@@ -23,6 +23,9 @@ public class UniverseManager : MonoBehaviour
 	public int scaleOfGeneration;
 	public float speedOfTime;
 	public float escapeCheckPeriod;
+
+	public int maxTargetRange;
+	public int minTargetRange;
 	
 	public Object sampleCar;
 	
@@ -44,6 +47,8 @@ public class UniverseManager : MonoBehaviour
 	[Header("Камера")]
 	public GameObject bigBrother;
 	public float bigBrotherSpeed;
+
+	public float targetScale;
 	public bool freeCam;
 	private Vector3 dragOrigin;
 	
@@ -92,7 +97,7 @@ public class UniverseManager : MonoBehaviour
 		avgPrevGenScore = 0;
 		for (int i = 0; i < scaleOfGeneration; i++)
 		{	
-			scoreList[i] = car[i].transform.GetChild(3).GetComponent<Brain>().SCORE;
+			scoreList[i] = brain[i].SCORE;//car[i].transform.GetChild(3).GetComponent<Brain>().SCORE;
 			avgPrevGenScore += scoreList[i];
 			
 			if (isSurvived(i, scaleOfGeneration, minSurviveProb, maxSurviveProb))
@@ -159,7 +164,10 @@ public class UniverseManager : MonoBehaviour
 		}
 
 		// Сброс всех машин
-		ResetCars();		
+		ResetCars();	
+		
+		// Сброс положения конечной точки
+		//ResetTarget(true);	
 		
 		startOfLastGeneration = Time.time;
 		generationNumber++;
@@ -240,6 +248,9 @@ public class UniverseManager : MonoBehaviour
 		// Сброс положений машинок
 		ResetCars();
 
+		// Сброс положения конечной точки
+		ResetTarget(true);
+
 		speedOfTime = 0;
 		Time.timeScale = 0;
 
@@ -281,8 +292,10 @@ public class UniverseManager : MonoBehaviour
 		
 		// Начальный спаун препятствий
 		sectorPosMap = new List<Vector3>();
-		//obsGenerator.Start();
 		sectorPosMap.Add(Vector3.zero);
+
+		// Сброс положения конечной точки
+		ResetTarget(true);
 		
 		// Спаун машин и инициализация вспомогательных переменных
 		car = new List<GameObject>();
@@ -393,6 +406,7 @@ public class UniverseManager : MonoBehaviour
 		if (Time.time - lastCheck > scoreCheckPeriod)
 		{
 			Transform tHull;
+			Transform tTarget = GameObject.Find("Target").GetComponent<Transform>();
 			for (int i = 0; i < scaleOfGeneration; i++)
 			{
 				tHull = car[i].transform.GetChild(3);
@@ -435,6 +449,20 @@ public class UniverseManager : MonoBehaviour
 			maxRadVectM[i] = 0;
 		}
 	}
+
+	void ResetTarget(bool inCentre)
+	{
+		GameObject target = GameObject.Find("Target");
+		Transform tTarget = target.GetComponent<Transform>();
+		if (inCentre)
+			tTarget.position = Vector3.up;
+		else
+			tTarget.position = new Vector3(
+				minTargetRange + Random.insideUnitCircle.x*maxTargetRange,
+				5,
+				minTargetRange + Random.insideUnitCircle.y*maxTargetRange				
+			);
+	}
 	
 	void BigBrotherManager()
 	{
@@ -456,8 +484,8 @@ public class UniverseManager : MonoBehaviour
 
 	public void SaveBestBrain()
 	{
-		string path = statPath.Remove(18) + "BestBrain.txt";//"_log.txt";
-		brain[0].Upload_Brain(path/*"./BestBrain.txt"*/);
+		string path = statPath.Remove(18) + "BestBrain.txt";
+		brain[0].Upload_Brain(path);
 	}
 
 	public void ImportBrain()

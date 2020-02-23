@@ -136,6 +136,10 @@ public class InformationManager : MonoBehaviour
                                             transform.position.z),
                                             ref util, 0.05f, Mathf.Infinity, Time.unscaledDeltaTime);
 
+        Transform tTarget = GameObject.Find("Target").GetComponent<Transform>();
+        float tScale = transform.position.y*manager.targetScale/35.0f;
+        tTarget.localScale = new Vector3(tScale, tScale, 1.0f);
+        
         RaycastHit hit;
         if (Input.GetMouseButtonDown(2))
         {
