@@ -24,6 +24,7 @@ public class UniverseManager : MonoBehaviour
 	public float speedOfTime;
 	public float escapeCheckPeriod;
 
+	public bool targetInCentre;
 	public int maxTargetRange;
 	public int minTargetRange;
 	
@@ -76,6 +77,7 @@ public class UniverseManager : MonoBehaviour
 	private float[] fullRotats;
 	private float[] radVectM;
 	private float[] maxRadVectM;
+	private int[] maxScore;
 	
 	private Vector3[] prevPos;
 	private Vector3[] prevRot;
@@ -88,7 +90,6 @@ public class UniverseManager : MonoBehaviour
 	
 	void NaturalSelection()
 	{
-		// Определение выживших по определенному распределению
 		int parentCount = 0;
 		
 		car = SortCarsByScore(car);
@@ -131,10 +132,12 @@ public class UniverseManager : MonoBehaviour
 				{
 					for (int m = 0; m < numOfConnections; m++)
 					{
+						// Кроссинговер
 						parent = DonorNumber(parentCount, winGenesSpreadRatio);
 						brain[i].weights[k][n][m] = brain[parent].weights[k][n][m];
 						brain[i].biases[k][n][m] = brain[parent].biases[k][n][m];
-						if (Random.Range(0.0f, 100.0f) <= mutationChance)
+						// Мутация
+						if (Random.Range(0.0f, 100.0f) < mutationChance)
 						{
 							brain[i].weights[k][n][m] = Mutate(brain[i].weights[k][n][m]);
 							brain[i].biases[k][n][m] = Mutate(brain[i].biases[k][n][m]);
@@ -249,7 +252,7 @@ public class UniverseManager : MonoBehaviour
 		ResetCars();
 
 		// Сброс положения конечной точки
-		ResetTarget(true);
+		ResetTarget(targetInCentre);
 
 		speedOfTime = 0;
 		Time.timeScale = 0;
@@ -295,7 +298,7 @@ public class UniverseManager : MonoBehaviour
 		sectorPosMap.Add(Vector3.zero);
 
 		// Сброс положения конечной точки
-		ResetTarget(true);
+		ResetTarget(targetInCentre);
 		
 		// Спаун машин и инициализация вспомогательных переменных
 		car = new List<GameObject>();
@@ -304,6 +307,7 @@ public class UniverseManager : MonoBehaviour
 		prevRot = new Vector3[scaleOfGeneration];
 		radVectM = new float[scaleOfGeneration];
 		maxRadVectM = new float[scaleOfGeneration];
+		maxScore = new int[scaleOfGeneration];
 		travelDists = new float[scaleOfGeneration];
 		fullRotats = new float[scaleOfGeneration];
 		for (int i = 0; i < scaleOfGeneration; i++)
@@ -312,6 +316,7 @@ public class UniverseManager : MonoBehaviour
 			fullRotats[i] = 0;
 			radVectM[i] = 0;
 			maxRadVectM[i] = 0;
+			maxScore[i] = 0;
 			prevPos[i] = Vector3.zero;
 			prevRot[i] = Vector3.zero;
 			car.Add((GameObject)Instantiate(sampleCar, Vector3.up, Quaternion.identity));
@@ -355,14 +360,20 @@ public class UniverseManager : MonoBehaviour
 	
 	int DonorNumber(int count, float prob)
 	{
-		float rand = Random.Range(0.0f, 1.0f);
-		prob = 1 - (prob/100);
-		for (int i = 0; i < count; i++)
+		int type = 0;
+		if (type == 0)
 		{
-			if (rand > prob)
-				prob += (1-prob)/prob;
-			else
-				return i;
+			if (prob == 100)
+				return 0;
+			float rand = Random.Range(0.0f, 1.0f);
+			prob = 1 - (prob/100);
+			for (int i = 0; i < count; i++)
+			{
+				if (rand > prob)
+					prob += (1-prob)/prob;
+				else
+					return i;
+			}
 		}
 		return 0;
 	}
@@ -407,6 +418,7 @@ public class UniverseManager : MonoBehaviour
 		{
 			Transform tHull;
 			Transform tTarget = GameObject.Find("Target").GetComponent<Transform>();
+			bool toTarget = tTarget.position == Vector3.up ? false : true;
 			for (int i = 0; i < scaleOfGeneration; i++)
 			{
 				tHull = car[i].transform.GetChild(3);
@@ -418,11 +430,21 @@ public class UniverseManager : MonoBehaviour
 				if (radVectM[i] > maxRadVectM[i])
 					maxRadVectM[i] = radVectM[i];
 				
-				int score = (int)(maxRadVectM[i]*distanceImportance) + (int)(fullRotats[i]*rotationImportance);
+				int score = 0;
+				if (!toTarget)
+					score = (int)(maxRadVectM[i]*distanceImportance) + (int)(fullRotats[i]*rotationImportance);
+				else 
+				{
+					Vector2 hullPos = new Vector2(tHull.position.x, tHull.position.z);
+					Vector2 targetPos = new Vector2(tTarget.position.x, tTarget.position.z);
+					Vector2 vTargetToRadius = (hullPos - targetPos).normalized * hullPos.magnitude;
+					maxScore[i] = (int)((vTargetToRadius - hullPos).magnitude) > maxScore[i] ?  (int)((vTargetToRadius - hullPos).magnitude) : maxScore[i];
+					score = maxScore[i];
+				}
 				if ((Time.time - startOfLastGeneration > dumbBrainCheckTime) ? score > minScore : true)
-					tHull.gameObject.GetComponent<Brain>().SCORE = score;
+					brain[i].SCORE = score;
 				else
-					tHull.gameObject.GetComponent<Brain>().isDead = true;
+					brain[i].isDead = true;
 			}
 			lastCheck = Time.time;
 		}
@@ -447,6 +469,7 @@ public class UniverseManager : MonoBehaviour
 			fullRotats[i] = 0;
 			radVectM[i] = 0;
 			maxRadVectM[i] = 0;
+			maxScore[i] = 0;
 		}
 	}
 
@@ -457,11 +480,15 @@ public class UniverseManager : MonoBehaviour
 		if (inCentre)
 			tTarget.position = Vector3.up;
 		else
+		{
+			float randX = Random.insideUnitCircle.x*(maxTargetRange-minTargetRange);
+			float randY = Random.insideUnitCircle.y*(maxTargetRange-minTargetRange);
 			tTarget.position = new Vector3(
-				minTargetRange + Random.insideUnitCircle.x*maxTargetRange,
-				5,
-				minTargetRange + Random.insideUnitCircle.y*maxTargetRange				
+				minTargetRange*Mathf.Sign(randX) + randX,
+			 	5, 
+				minTargetRange*Mathf.Sign(randY) + randY
 			);
+		}
 	}
 	
 	void BigBrotherManager()
@@ -470,9 +497,12 @@ public class UniverseManager : MonoBehaviour
 		{
 			Vector3 util = Vector3.zero;
 			Vector3 pos = new Vector3(car[0].transform.GetChild(3).gameObject.transform.position.x, 0.0f, car[0].transform.GetChild(3).gameObject.transform.position.z);
+			int maxScore = 0;
 			for (int i = 1; i < car.Count; i++)
-				if (car[i].transform.GetChild(3).gameObject.transform.position.magnitude > pos.magnitude)
+				//if (car[i].transform.GetChild(3).gameObject.transform.position.magnitude > pos.magnitude)
+				if (brain[i].SCORE > maxScore)
 				{
+					maxScore = brain[i].SCORE;
 					pos = car[i].transform.GetChild(3).gameObject.transform.position;
 				}
 			bigBrother.transform.position = Vector3.SmoothDamp(bigBrother.transform.position,

@@ -114,8 +114,8 @@ public class InformationManager : MonoBehaviour
             GUI.Label(new Rect(5, 111, 200, 20), "Min шанс выжить: " + manager.minSurviveProb.ToString());
             manager.minSurviveProb = GUI.HorizontalSlider(new Rect(4, 131, 200, 20), manager.minSurviveProb, 0, 100);
             // Шанс мутации - поле ввода
-            GUI.Label(new Rect(5, 143, 145, 20), "Шанс мутации:");
-            manager.mutationChance = Convert.ToInt32(GUI.TextField(new Rect(150, 143, 50, 20),manager.mutationChance.ToString(), 3));
+            GUI.Label(new Rect(5, 143, 145, 20), "Шанс мутации*0.01:");
+            manager.mutationChance = float.Parse(GUI.TextField(new Rect(150, 143, 50, 20), (manager.mutationChance*100).ToString(), 3))/100;
             // Важность мутации - ползун
             GUI.Label(new Rect(5, 163, 200, 20), "Сила мутации: " + (manager.mutationRate - manager.mutationRate%0.01).ToString());
             manager.mutationRate  = GUI.HorizontalSlider(new Rect(4, 183, 200, 20), manager.mutationRate, 0.0f, 1.0f);

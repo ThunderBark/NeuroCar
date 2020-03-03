@@ -29,6 +29,7 @@ public class ObstacleGenerator : MonoBehaviour
 	
 	public void SpawnObstacles(Vector3 center)
 	{
+		/*
 		NumbOfObst = Random.Range((int)(range*range*density*(1-deviationPercent/100)), (int)(range*range*density*(1+deviationPercent/100)));
 		
 		GameObject primitive;
@@ -52,8 +53,7 @@ public class ObstacleGenerator : MonoBehaviour
 			primitive.transform.localScale = scale;
 			primitive.transform.position = pos;
 			primitive.transform.parent = obstacleParent.transform;
-			
-		}
+		}*/
 	}
 	
 	///////////////////////////////////////////////////////////////////////
@@ -66,6 +66,7 @@ public class ObstacleGenerator : MonoBehaviour
 		
 		NumbOfObst = Random.Range((int)(range*range*density*(1-deviationPercent/100)), (int)(range*range*density*(1+deviationPercent/100)));
 		
+		/*
 		GameObject primitive;
 		for (int i = 0; i < NumbOfObst; i++)
 		{
@@ -90,6 +91,6 @@ public class ObstacleGenerator : MonoBehaviour
 			primitive.transform.position = pos;
 			primitive.transform.parent = obstacleParent.transform;
 			
-		}
+		}*/
     }
 }
