@@ -172,7 +172,7 @@ public class InformationManager : MonoBehaviour
             Также желательно поменять директорию, куда сохраняются логи
         */
         string time = DateTime.Now.ToString("HHmmss");
-        string date = DateTime.Now.ToString("ddMMyyyy");
+        string date = DateTime.Now.ToString("yyyyMMdd");
         if (!Directory.Exists("./Logs/"))
             Directory.CreateDirectory("./Logs/");
 		string statPath = "./Logs/" + date + "_" + time  + "_log.txt";

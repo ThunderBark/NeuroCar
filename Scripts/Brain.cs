@@ -128,7 +128,7 @@ public class Brain : MonoBehaviour
 		}
 		// Получение значения угла поворота относительно вектора до пункта назначения
 		Vector3 carToTarVect = target.GetComponent<Transform>().position - transform.position;
-		x[numOfEyes] = Vector3.SignedAngle(carToTarVect, Vector3.forward, Vector3.up)/180f;
+		x[numOfEyes] = Vector3.SignedAngle(carToTarVect, transform.forward, Vector3.up)/180f;
 		turn = x[numOfEyes];
 
 		// Расчет нейронной сети
@@ -152,16 +152,26 @@ public class Brain : MonoBehaviour
 		{
 			y += weight[i]*x[i] + bias[i];
 		}
-		return ReLU(y);
+		return ReLU_mod(y, 1f);
 	}
 	
 	///////////////////
-	//ReLU
+	// ReLU
 	float ReLU(float x)
 	{
 		return Mathf.Max(0, x);
 	}
-	
+
+	///////////////////
+	// Тождественная с ограничением
+	float ReLU_mod(float x, float magnitude)
+	{
+		if (x < -magnitude)
+			x = -magnitude;
+		if (x > magnitude)
+			x = magnitude;
+		return x;
+	}
 	///////////////////////////////////////////
 	public void Upload_Brain(string path)
 	{

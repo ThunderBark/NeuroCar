@@ -874,4 +874,5 @@ MonoBehaviour:
   minBias: -1
   prevTime: 0
   turnCheck: 0
+  turn: 0
   hitInfos: []

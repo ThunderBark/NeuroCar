@@ -41,15 +41,22 @@ public class CarConstructor : MonoBehaviour
 		transform.position = new Vector3(0f, 0.5f*wheel_diam*RtoU_scale, 0f);
 		transform.rotation = Quaternion.Euler(0, 0, 0);
 		
-		rR.position = new Vector3((Hull_width+wheel_width)*RtoU_scale/2, 0f, ((-1)*wheel_offset_Z)*RtoU_scale);
-		rL.position = new Vector3((wheel_width+Hull_width)*RtoU_scale/(-2), 0f, ((-1)*wheel_offset_Z)*RtoU_scale);
-		rSphere.position = new Vector3(0f, (wheel_diam-Hull_thick)*RtoU_scale/(-2), (-1)*Sphere_offset_Z*RtoU_scale);
-		rHull.position = new Vector3(0f, 0f, (-1)*(Hull_length/2.0f)*RtoU_scale);
+		rR.position = new Vector3((Hull_width+wheel_width)*RtoU_scale/2, 0.6f*wheel_diam*RtoU_scale, ((-1)*wheel_offset_Z)*RtoU_scale);
+		rL.position = new Vector3((wheel_width+Hull_width)*RtoU_scale/(-2), 0.6f*wheel_diam*RtoU_scale, ((-1)*wheel_offset_Z)*RtoU_scale);
+		rSphere.position = new Vector3(0f, 1.2f*(wheel_diam-Hull_thick)*RtoU_scale/(-2), (-1)*Sphere_offset_Z*RtoU_scale);
+		rHull.position = new Vector3(0f, 0.6f*wheel_diam*RtoU_scale, (-1)*(Hull_length/2.0f)*RtoU_scale);
 		
-		rR.rotation = new Quaternion(0, 0, 0, 1);
-		rL.rotation = new Quaternion(0, 0, 0, 1);
-		rSphere.rotation = new Quaternion(0, 0, 0, 1);
-		rHull.rotation = new Quaternion(0, 0, 0, 1);
+		int rand = Random.Range(-180, 181);
+		//rand = 0;
+		rR.rotation = Quaternion.Euler(0, rand, 90);
+		rL.rotation = Quaternion.Euler(0, rand, 90);
+		rSphere.rotation = Quaternion.Euler(0, rand, 0);
+		rHull.rotation = Quaternion.Euler(0, rand, 0);
+
+		rHull.velocity = Vector3.zero;
+		rR.velocity = Vector3.zero;
+		rL.velocity = Vector3.zero;
+		rSphere.velocity = Vector3.zero;
 		
 		rHull.isKinematic = false;
 		rR.isKinematic = false;

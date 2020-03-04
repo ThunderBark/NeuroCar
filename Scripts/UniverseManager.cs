@@ -4,6 +4,7 @@ using System.Linq;
 using System.IO;
 using static System.Exception;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class UniverseManager : MonoBehaviour
 {
@@ -60,6 +61,7 @@ public class UniverseManager : MonoBehaviour
 	public int t,t1;
 	public string str;
 	public string tstr;
+	public int deathGen;
 	
 	
 	// Внутренние настройки
@@ -122,6 +124,13 @@ public class UniverseManager : MonoBehaviour
 		// Кроссоверинг и мутация
 		int numOfConnections;
 		int parent;
+
+		// Тестовая версия выбора двух родителей
+		int parent1 = Random.Range(0, parentCount);
+		int parent2 = Random.Range(0, parentCount);
+		while (parent2 == parent1)
+			parent2 = Random.Range(0, parentCount);
+
 		for (int i = parentCount; i < scaleOfGeneration; i++)
 		{
 			brain[i] = car[i].transform.GetChild(3).GetComponent<Brain>();
@@ -133,9 +142,10 @@ public class UniverseManager : MonoBehaviour
 					for (int m = 0; m < numOfConnections; m++)
 					{
 						// Кроссинговер
-						parent = DonorNumber(parentCount, winGenesSpreadRatio);
-						brain[i].weights[k][n][m] = brain[parent].weights[k][n][m];
-						brain[i].biases[k][n][m] = brain[parent].biases[k][n][m];
+						//parent = DonorNumber(parentCount, winGenesSpreadRatio);
+						int pick = Random.Range(0,2);
+						brain[i].weights[k][n][m] = brain[pick>0 ? parent2:parent1].weights[k][n][m];
+						brain[i].biases[k][n][m] = brain[pick>0 ? parent2:parent1].biases[k][n][m];
 						// Мутация
 						if (Random.Range(0.0f, 100.0f) < mutationChance)
 						{
@@ -156,6 +166,9 @@ public class UniverseManager : MonoBehaviour
 		
 		// Процедура естественного отбора и размножения
 		NaturalSelection();
+
+		// Процедура выключения симуляции по времени или по поколению
+		SelfDestruct();
 		
 		// Респавн препятствий
 		if (generateObsNextGen)
@@ -437,7 +450,7 @@ public class UniverseManager : MonoBehaviour
 				{
 					Vector2 hullPos = new Vector2(tHull.position.x, tHull.position.z);
 					Vector2 targetPos = new Vector2(tTarget.position.x, tTarget.position.z);
-					Vector2 vTargetToRadius = (hullPos - targetPos).normalized * hullPos.magnitude;
+					Vector2 vTargetToRadius = (hullPos - targetPos).normalized * targetPos.magnitude;
 					maxScore[i] = (int)((vTargetToRadius - hullPos).magnitude) > maxScore[i] ?  (int)((vTargetToRadius - hullPos).magnitude) : maxScore[i];
 					score = maxScore[i];
 				}
@@ -568,6 +581,19 @@ public class UniverseManager : MonoBehaviour
 		{
 			brain[i].weights = w;
 			brain[i].biases = b;
+		}
+	}
+
+	void SelfDestruct()
+	{
+		bool isCounting = GameObject.Find("Canvas/SelfDestruct/EnDestruct").GetComponent<Toggle>().isOn;
+		if (isCounting)
+		{
+			int deathMin = int.Parse(GameObject.Find("Canvas/SelfDestruct/MinField").GetComponent<InputField>().text);
+			/*int*/ deathGen = int.Parse(GameObject.Find("Canvas/SelfDestruct/GenField").GetComponent<InputField>().text);
+			if (((Time.realtimeSinceStartup/60 > deathMin) && deathMin != 0) || 
+				((generationNumber >= deathGen) && deathGen!=0))
+            	Application.Quit();
 		}
 	}
 }
