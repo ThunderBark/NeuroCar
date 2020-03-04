@@ -122,9 +122,12 @@ public class UniverseManager : MonoBehaviour
 		car = SortCarsByScore(car);
 		
 		// Кроссоверинг и мутация
-		int numOfConnections;
-		int parent;
-
+		int CrossingoverType = 0; // Выбор типа кроссинговера: 0 - Деление отобранных особей
+															// 1 - Два родителя
+															// 2 - Множество родителей
+		int numOfConnections;	
+		int parent = 0;
+		
 		// Тестовая версия выбора двух родителей
 		int parent1 = Random.Range(0, parentCount);
 		int parent2 = Random.Range(0, parentCount);
@@ -141,11 +144,25 @@ public class UniverseManager : MonoBehaviour
 				{
 					for (int m = 0; m < numOfConnections; m++)
 					{
-						// Кроссинговер
-						//parent = DonorNumber(parentCount, winGenesSpreadRatio);
-						int pick = Random.Range(0,2);
-						brain[i].weights[k][n][m] = brain[pick>0 ? parent2:parent1].weights[k][n][m];
-						brain[i].biases[k][n][m] = brain[pick>0 ? parent2:parent1].biases[k][n][m];
+						// Кроссинговер ---
+						if (CrossingoverType == 0)
+						{
+							brain[i].weights[k][n][m] = brain[parent].weights[k][n][m];
+							brain[i].biases[k][n][m] = brain[parent].biases[k][n][m];
+						}
+						else if (CrossingoverType == 1)
+						{
+							int pick = Random.Range(0,2);
+							brain[i].weights[k][n][m] = brain[pick>0 ? parent2:parent1].weights[k][n][m];
+							brain[i].biases[k][n][m] = brain[pick>0 ? parent2:parent1].biases[k][n][m];
+						}
+						else if (CrossingoverType == 2)
+						{
+							parent = DonorNumber(parentCount, winGenesSpreadRatio);
+							brain[i].weights[k][n][m] = brain[parent].weights[k][n][m];
+							brain[i].biases[k][n][m] = brain[parent].biases[k][n][m];
+						}
+						// ----------------
 						// Мутация
 						if (Random.Range(0.0f, 100.0f) < mutationChance)
 						{
@@ -156,6 +173,11 @@ public class UniverseManager : MonoBehaviour
 				}
 				numOfConnections = brain[i].numOfLayers[k];
 			}
+			if (CrossingoverType == 0)
+				if (parent < scaleOfGeneration)
+					parent++;
+				else
+					parent = 0;
 		}
 	}
 	

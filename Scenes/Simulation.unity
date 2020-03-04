@@ -5697,13 +5697,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab98c67ac87671f42934dd4636fc6257, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  range: 50
+  obstacleType: 1
   density: 0.045
   deviationPercent: 0
-  obstacleParent: {fileID: 1901388054}
+  stepNum: 10
+  range: 50
   minDimension: 3
   maxDimension: 3
-  obstacleType: 0
 --- !u!1 &1870246689
 GameObject:
   m_ObjectHideFlags: 0
