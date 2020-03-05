@@ -144,7 +144,7 @@ public class UniverseManager : MonoBehaviour
 				{
 					for (int m = 0; m < numOfConnections; m++)
 					{
-						// Кроссинговер ---
+						// Кроссинговер --------------------
 						if (CrossingoverType == 0)
 						{
 							brain[i].weights[k][n][m] = brain[parent].weights[k][n][m];
@@ -162,13 +162,14 @@ public class UniverseManager : MonoBehaviour
 							brain[i].weights[k][n][m] = brain[parent].weights[k][n][m];
 							brain[i].biases[k][n][m] = brain[parent].biases[k][n][m];
 						}
-						// ----------------
-						// Мутация
+						// ---------------------------------
+						// Мутация -------------------------
 						if (Random.Range(0.0f, 100.0f) < mutationChance)
 						{
 							brain[i].weights[k][n][m] = Mutate(brain[i].weights[k][n][m]);
 							brain[i].biases[k][n][m] = Mutate(brain[i].biases[k][n][m]);
 						}
+						//----------------------------------
 					}
 				}
 				numOfConnections = brain[i].numOfLayers[k];

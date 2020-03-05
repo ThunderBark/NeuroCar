@@ -65,7 +65,7 @@ public class CarConstructor : MonoBehaviour
 		
 	}
 	
-    void Awake()
+    void Start()
     {
 		transform.position = new Vector3(0f, 0.5f*wheel_diam*RtoU_scale, 0f);
 		
