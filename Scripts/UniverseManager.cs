@@ -39,12 +39,20 @@ public class UniverseManager : MonoBehaviour
 	public float mutationChance;
 	public float mutationRate;
 	public bool generateObsNextGen;
+	public bool	enableGenerateObs;
+
+	int MutationType;
+	int CrossingoverType;	// Выбор типа кроссинговера: 0 - Деление отобранных особей
+													  // 1 - Два родителя
+													  // 2 - Множество родителей
 	
 	[Header("Настройки расчета приспособленности")]
 	public float distanceImportance;
 	public float rotationImportance;
 	public float dumbBrainCheckTime;
 	public int minScore;	
+	public bool enRandomCarOrientation;
+	public bool changeTargetPos;
 	
 	[Header("Камера")]
 	public GameObject bigBrother;
@@ -100,7 +108,7 @@ public class UniverseManager : MonoBehaviour
 		avgPrevGenScore = 0;
 		for (int i = 0; i < scaleOfGeneration; i++)
 		{	
-			scoreList[i] = brain[i].SCORE;//car[i].transform.GetChild(3).GetComponent<Brain>().SCORE;
+			scoreList[i] = brain[i].SCORE;
 			avgPrevGenScore += scoreList[i];
 			
 			if (isSurvived(i, scaleOfGeneration, minSurviveProb, maxSurviveProb))
@@ -122,9 +130,9 @@ public class UniverseManager : MonoBehaviour
 		car = SortCarsByScore(car);
 		
 		// Кроссоверинг и мутация
-		int CrossingoverType = 0; // Выбор типа кроссинговера: 0 - Деление отобранных особей
-															// 1 - Два родителя
-															// 2 - Множество родителей
+		// Выбор типа кроссинговера: 0 - Деление отобранных особей
+								  // 1 - Два родителя
+								  // 2 - Множество родителей
 		int numOfConnections;	
 		int parent = 0;
 		
@@ -185,7 +193,7 @@ public class UniverseManager : MonoBehaviour
 	void StartNextGeneration()
 	{
 		// Сортировка бесполезных мозгов
-		//CheckUselessBrains();
+		CheckUselessBrains();
 		
 		// Процедура естественного отбора и размножения
 		NaturalSelection();
@@ -197,9 +205,11 @@ public class UniverseManager : MonoBehaviour
 		if (generateObsNextGen)
 		{
 			sectorPosMap.Clear();
-			obsGenerator.Start();
+			//obsGenerator.Start();
+			obsGenerator.SpawnObstacles(Vector3.zero);
 			sectorPosMap.Add(Vector3.zero);
 			generateObsNextGen = false;
+			enableGenerateObs = true;
 		}
 
 		// Сброс всех машин
@@ -210,74 +220,79 @@ public class UniverseManager : MonoBehaviour
 		
 		startOfLastGeneration = Time.time;
 		generationNumber++;
+		// Вывод номера поколения
+		GameObject.Find("Canvas/Generation/Text").GetComponent<Text>().text = "Поколение: " + generationNumber;
 	}
 	
 	void CheckSimulationEscape()
 	{
-		int[] carPosition = new int[2];
-		Vector3 spawnPosition;
-		GameObject[] hull = new GameObject[scaleOfGeneration];
-		
-		for(int i = 0; i < scaleOfGeneration; i++)
+		if (enableGenerateObs)
 		{
-			hull[i] = car[i].transform.GetChild(3).gameObject;
+			int[] carPosition = new int[2];
+			Vector3 spawnPosition;
+			GameObject[] hull = new GameObject[scaleOfGeneration];
 			
-			if ((int)(car[i].transform.position.x)%(2*obsGenerator.range) < obsGenerator.range)
-				carPosition[0] = (int)(hull[i].transform.position.x - (int)(hull[i].transform.position.x)%(2*obsGenerator.range));
-			else
-				carPosition[0] = (int)(hull[i].transform.position.x + (int)(hull[i].transform.position.x)%(2*obsGenerator.range));
-			if ((int)(car[i].transform.position.z)%(2*obsGenerator.range) < obsGenerator.range)
-				carPosition[1] = (int)(hull[i].transform.position.z - (int)(hull[i].transform.position.z)%(2*obsGenerator.range));
-			else
-				carPosition[1] = (int)(hull[i].transform.position.z + (int)(hull[i].transform.position.z)%(2*obsGenerator.range));
-			
-			if (!isOcupated(carPosition, 1, 0))
+			for(int i = 0; i < scaleOfGeneration; i++)
 			{
-				spawnPosition = new Vector3(carPosition[0]+2*obsGenerator.range, 0.0f, carPosition[1]);
-				obsGenerator.SpawnObstacles(spawnPosition);
-				sectorPosMap.Add(spawnPosition);
-			}
-			if (!isOcupated(carPosition, 1, 1))
-			{
-				spawnPosition = new Vector3(carPosition[0]+2*obsGenerator.range, 0.0f, carPosition[1]+2*obsGenerator.range);
-				obsGenerator.SpawnObstacles(spawnPosition);
-				sectorPosMap.Add(spawnPosition);
-			}
-			if (!isOcupated(carPosition, 0, 1))
-			{
-				spawnPosition = new Vector3(carPosition[0], 0.0f, carPosition[1]+2*obsGenerator.range);
-				obsGenerator.SpawnObstacles(spawnPosition);
-				sectorPosMap.Add(spawnPosition);
-			}
-			if (!isOcupated(carPosition, -1, 1))
-			{
-				spawnPosition = new Vector3(carPosition[0]-2*obsGenerator.range, 0.0f, carPosition[1]+2*obsGenerator.range);
-				obsGenerator.SpawnObstacles(spawnPosition);
-				sectorPosMap.Add(spawnPosition);
-			}
-			if (!isOcupated(carPosition, -1, 0))
-			{
-				spawnPosition = new Vector3(carPosition[0]-2*obsGenerator.range, 0.0f, carPosition[1]);
-				obsGenerator.SpawnObstacles(spawnPosition);
-				sectorPosMap.Add(spawnPosition);
-			}
-			if (!isOcupated(carPosition, -1, -1))
-			{
-				spawnPosition = new Vector3(carPosition[0]-2*obsGenerator.range, 0.0f, carPosition[1]-2*obsGenerator.range);
-				obsGenerator.SpawnObstacles(spawnPosition);
-				sectorPosMap.Add(spawnPosition);
-			}
-			if (!isOcupated(carPosition, 0, -1))
-			{
-				spawnPosition = new Vector3(carPosition[0], 0.0f, carPosition[1]-2*obsGenerator.range);
-				obsGenerator.SpawnObstacles(spawnPosition);
-				sectorPosMap.Add(spawnPosition);
-			}
-			if (!isOcupated(carPosition, 1, -1))
-			{
-				spawnPosition = new Vector3(carPosition[0]+2*obsGenerator.range, 0.0f, carPosition[1]-2*obsGenerator.range);
-				obsGenerator.SpawnObstacles(spawnPosition);
-				sectorPosMap.Add(spawnPosition);
+				hull[i] = car[i].transform.GetChild(3).gameObject;
+				
+				if ((int)(car[i].transform.position.x)%(2*obsGenerator.range) < obsGenerator.range)
+					carPosition[0] = (int)(hull[i].transform.position.x - (int)(hull[i].transform.position.x)%(2*obsGenerator.range));
+				else
+					carPosition[0] = (int)(hull[i].transform.position.x + (int)(hull[i].transform.position.x)%(2*obsGenerator.range));
+				if ((int)(car[i].transform.position.z)%(2*obsGenerator.range) < obsGenerator.range)
+					carPosition[1] = (int)(hull[i].transform.position.z - (int)(hull[i].transform.position.z)%(2*obsGenerator.range));
+				else
+					carPosition[1] = (int)(hull[i].transform.position.z + (int)(hull[i].transform.position.z)%(2*obsGenerator.range));
+				
+				if (!isOcupated(carPosition, 1, 0))
+				{
+					spawnPosition = new Vector3(carPosition[0]+2*obsGenerator.range, 0.0f, carPosition[1]);
+					obsGenerator.SpawnObstacles(spawnPosition);
+					sectorPosMap.Add(spawnPosition);
+				}
+				if (!isOcupated(carPosition, 1, 1))
+				{
+					spawnPosition = new Vector3(carPosition[0]+2*obsGenerator.range, 0.0f, carPosition[1]+2*obsGenerator.range);
+					obsGenerator.SpawnObstacles(spawnPosition);
+					sectorPosMap.Add(spawnPosition);
+				}
+				if (!isOcupated(carPosition, 0, 1))
+				{
+					spawnPosition = new Vector3(carPosition[0], 0.0f, carPosition[1]+2*obsGenerator.range);
+					obsGenerator.SpawnObstacles(spawnPosition);
+					sectorPosMap.Add(spawnPosition);
+				}
+				if (!isOcupated(carPosition, -1, 1))
+				{
+					spawnPosition = new Vector3(carPosition[0]-2*obsGenerator.range, 0.0f, carPosition[1]+2*obsGenerator.range);
+					obsGenerator.SpawnObstacles(spawnPosition);
+					sectorPosMap.Add(spawnPosition);
+				}
+				if (!isOcupated(carPosition, -1, 0))
+				{
+					spawnPosition = new Vector3(carPosition[0]-2*obsGenerator.range, 0.0f, carPosition[1]);
+					obsGenerator.SpawnObstacles(spawnPosition);
+					sectorPosMap.Add(spawnPosition);
+				}
+				if (!isOcupated(carPosition, -1, -1))
+				{
+					spawnPosition = new Vector3(carPosition[0]-2*obsGenerator.range, 0.0f, carPosition[1]-2*obsGenerator.range);
+					obsGenerator.SpawnObstacles(spawnPosition);
+					sectorPosMap.Add(spawnPosition);
+				}
+				if (!isOcupated(carPosition, 0, -1))
+				{
+					spawnPosition = new Vector3(carPosition[0], 0.0f, carPosition[1]-2*obsGenerator.range);
+					obsGenerator.SpawnObstacles(spawnPosition);
+					sectorPosMap.Add(spawnPosition);
+				}
+				if (!isOcupated(carPosition, 1, -1))
+				{
+					spawnPosition = new Vector3(carPosition[0]+2*obsGenerator.range, 0.0f, carPosition[1]-2*obsGenerator.range);
+					obsGenerator.SpawnObstacles(spawnPosition);
+					sectorPosMap.Add(spawnPosition);
+				}
 			}
 		}
 	}
@@ -304,10 +319,16 @@ public class UniverseManager : MonoBehaviour
 		}
 
 		// Очистка карты
-		sectorPosMap.Clear();
-		obsGenerator.Start();
-		sectorPosMap.Add(Vector3.zero);
-		generateObsNextGen = false;
+		//generateObsNextGen = false;
+		if (generateObsNextGen)
+		{
+			sectorPosMap.Clear();
+			//obsGenerator.Start();
+			obsGenerator.SpawnObstacles(Vector3.zero);
+			sectorPosMap.Add(Vector3.zero);
+			generateObsNextGen = false;
+			enableGenerateObs = true;
+		}
 		// Сброс статистики
 		bestPrevGenScore = 0;
 		gain = 0;
@@ -321,6 +342,8 @@ public class UniverseManager : MonoBehaviour
 	//////////////////////////////////////////////////////////////////////////////////////////////////
     void Start()
     {
+		//ImportSettings();
+
 		// Инициализация
 		obsGenerator = this.GetComponent<ObstacleGenerator>();
 		scoreList = new int[scaleOfGeneration];
@@ -331,7 +354,16 @@ public class UniverseManager : MonoBehaviour
 		
 		// Начальный спаун препятствий
 		sectorPosMap = new List<Vector3>();
-		sectorPosMap.Add(Vector3.zero);
+		if (generateObsNextGen)
+		{
+			obsGenerator.Start();
+			obsGenerator.SpawnObstacles(Vector3.zero);
+			sectorPosMap.Add(Vector3.zero);
+			generateObsNextGen = false;
+			enableGenerateObs = true;
+		}
+		obsGenerator.Start();
+
 
 		// Сброс положения конечной точки
 		ResetTarget(targetInCentre);
@@ -382,7 +414,10 @@ public class UniverseManager : MonoBehaviour
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	float Mutate(float gene)
 	{
-		gene = Random.Range(-mutationRate, mutationRate);
+		int MutationType = 0;				// Тип мутации:			0 - Полная замена гена на значение в интервале
+		if (MutationType == 0)									 // 1 - Изменение гена на значение
+			gene = Random.Range(-mutationRate, mutationRate);
+		//else if (MutationType == 1)
 		return gene;
 	}
 	
@@ -463,7 +498,7 @@ public class UniverseManager : MonoBehaviour
 				fullRotats[i] += Mathf.Abs(tHull.eulerAngles.y - prevRot[i].y);
 				prevRot[i] = tHull.eulerAngles;
 				radVectM[i] = tHull.position.magnitude;
-				if (radVectM[i] > maxRadVectM[i])
+				//if (radVectM[i] > maxRadVectM[i])
 					maxRadVectM[i] = radVectM[i];
 				
 				int score = 0;
@@ -474,8 +509,9 @@ public class UniverseManager : MonoBehaviour
 					Vector2 hullPos = new Vector2(tHull.position.x, tHull.position.z);
 					Vector2 targetPos = new Vector2(tTarget.position.x, tTarget.position.z);
 					Vector2 vTargetToRadius = (hullPos - targetPos).normalized * targetPos.magnitude;
-					maxScore[i] = (int)((vTargetToRadius - hullPos).magnitude) > maxScore[i] ?  (int)((vTargetToRadius - hullPos).magnitude) : maxScore[i];
-					score = maxScore[i];
+					score = (int)((vTargetToRadius - hullPos).magnitude);
+					maxScore[i] = score > maxScore[i] ?  score : maxScore[i];
+					//score = maxScore[i];
 				}
 				if ((Time.time - startOfLastGeneration > dumbBrainCheckTime) ? score > minScore : true)
 					brain[i].SCORE = score;
@@ -486,10 +522,7 @@ public class UniverseManager : MonoBehaviour
 		}
 	}
 	
-	void CheckUselessBrains()
-	{
-		
-	}
+	void CheckUselessBrains(){}
 	
 	void ResetCars()
 	{
@@ -511,19 +544,23 @@ public class UniverseManager : MonoBehaviour
 
 	void ResetTarget(bool inCentre)
 	{
-		GameObject target = GameObject.Find("Target");
-		Transform tTarget = target.GetComponent<Transform>();
-		if (inCentre)
-			tTarget.position = Vector3.up;
-		else
+		if (changeTargetPos)
 		{
-			float randX = Random.insideUnitCircle.x*(maxTargetRange-minTargetRange);
-			float randY = Random.insideUnitCircle.y*(maxTargetRange-minTargetRange);
-			tTarget.position = new Vector3(
-				minTargetRange*Mathf.Sign(randX) + randX,
-			 	5, 
-				minTargetRange*Mathf.Sign(randY) + randY
-			);
+			GameObject target = GameObject.Find("Target");
+			Transform tTarget = target.GetComponent<Transform>();
+			if (inCentre)
+				tTarget.position = Vector3.up;
+			else
+			{
+				float randX = Random.insideUnitCircle.x*(maxTargetRange-minTargetRange);
+				float randY = Random.insideUnitCircle.y*(maxTargetRange-minTargetRange);
+				tTarget.position = new Vector3(
+					minTargetRange*Mathf.Sign(randX) + randX,
+					5, 
+					minTargetRange*Mathf.Sign(randY) + randY
+				);
+			}
+			changeTargetPos = false;
 		}
 	}
 	
@@ -550,7 +587,7 @@ public class UniverseManager : MonoBehaviour
 
 	public void SaveBestBrain()
 	{
-		string path = statPath.Remove(18) + "BestBrain.txt";
+		string path = statPath.Remove(23) + "BestBrain.txt";
 		brain[0].Upload_Brain(path);
 	}
 
@@ -605,6 +642,11 @@ public class UniverseManager : MonoBehaviour
 			brain[i].weights = w;
 			brain[i].biases = b;
 		}
+	}
+
+	void ImportSettings()
+	{
+		StreamReader rd = new StreamReader("./Settings.txt");
 	}
 
 	void SelfDestruct()

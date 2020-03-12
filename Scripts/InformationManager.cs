@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEditor;
 using UnityEngine.SceneManagement;
 
 public class InformationManager : MonoBehaviour
 {
 	public GameObject plane;
+    public GameObject menu;
     UniverseManager manager;
     ObstacleGenerator generator;
 
     [Header("Элементы ПИ")]
     public Texture restart;
     public Texture importBrain;
-	
 	private GUIStyle style;
 
     
@@ -32,15 +33,12 @@ public class InformationManager : MonoBehaviour
 
     void OnGUI()
     {
-        // Вывод номера поколения
-        GUI.Box(new Rect(18, 20, 100, 20), "Поколение " + manager.generationNumber);
-
-        if (GUI.Button(new Rect(130, 10, 40, 40), restart))
-            manager.BigBang();
-        if (GUI.Button(new Rect(180, 10, 40, 40), importBrain))
-            manager.BigBang(true);
-        if (GUI.Button(new Rect(230, 10, 40, 40), "CAM"))
-            manager.freeCam = !manager.freeCam;
+        // Слайдер времени
+        GameObject.Find("Canvas/SpeedOfTime/Text").GetComponent<Text>().text = "Скорость времени: " + manager.speedOfTime;
+        manager.speedOfTime = GameObject.Find("Canvas/SpeedOfTime/Slider").GetComponent<Slider>().value;
+        Time.timeScale = manager.speedOfTime;
+        
+		manager.freeCam = GameObject.Find("Canvas/FreeCam").GetComponent<Toggle>().isOn;
 
         // Блок настроек генераций препятствий
         GUI.Window(0, new Rect(16, 115, 208, 119), WindowManager, "Настройки препятствий");
@@ -49,11 +47,6 @@ public class InformationManager : MonoBehaviour
         // Блок настроек естественного отбора
         GUI.Window(2, new Rect(16, 330, 208, 232), WindowManager, "Настройки отбора");
         
-        // Слайдер времени
-        GUI.Box(new Rect(16, 53, 208, 54), "Скорость времени " + manager.speedOfTime);
-        manager.speedOfTime = (int)GUI.HorizontalSlider(new Rect(20, 80, 200, 40), manager.speedOfTime, 0.0f, 20.0f);
-
-        Time.timeScale = manager.speedOfTime;
 
         CheckKeys();
         if (manager.freeCam)
@@ -63,7 +56,17 @@ public class InformationManager : MonoBehaviour
     void CheckKeys()
     {
         if (Input.GetKey("escape"))
-            Application.Quit();
+            menu.SetActive(true);
+    }
+
+    public void Quit()
+    {
+        Application.Quit();
+    }
+
+    public void ToBeginning()
+    {
+        SceneManager.LoadScene("StartMenu");
     }
 
     void WindowManager(int windowId)

@@ -46,8 +46,11 @@ public class CarConstructor : MonoBehaviour
 		rSphere.position = new Vector3(0f, 1.2f*(wheel_diam-Hull_thick)*RtoU_scale/(-2), (-1)*Sphere_offset_Z*RtoU_scale);
 		rHull.position = new Vector3(0f, 0.6f*wheel_diam*RtoU_scale, (-1)*(Hull_length/2.0f)*RtoU_scale);
 		
-		int rand = Random.Range(-180, 181);
-		//rand = 0;
+		int rand = Random.Range(-180, 180);
+		bool isRandomOrientation = GameObject.Find("Plane").GetComponent<UniverseManager>().enRandomCarOrientation;
+		if (!isRandomOrientation)
+			rand = 0;
+
 		rR.rotation = Quaternion.Euler(0, rand, 90);
 		rL.rotation = Quaternion.Euler(0, rand, 90);
 		rSphere.rotation = Quaternion.Euler(0, rand, 0);

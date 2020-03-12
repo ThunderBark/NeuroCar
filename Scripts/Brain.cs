@@ -124,7 +124,11 @@ public class Brain : MonoBehaviour
 		// Получение значений дальностей
 		for (int i = 0; i < numOfEyes; i++)
 		{
-			x[i] = hitInfos[i].hitDistance/sightRange;
+			bool revert = true;
+			if (!revert)
+				x[i] = hitInfos[i].hitDistance/sightRange;
+			else
+				x[i] = 1 - hitInfos[i].hitDistance/sightRange;
 		}
 		// Получение значения угла поворота относительно вектора до пункта назначения
 		Vector3 carToTarVect = target.GetComponent<Transform>().position - transform.position;

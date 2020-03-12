@@ -35,6 +35,18 @@ public class ObstacleGenerator : MonoBehaviour
 	
 	public void SpawnObstacles(Vector3 center)
 	{
+		if (center == Vector3.zero)
+		{
+			for (int i = 0; i < obstacleParent.transform.childCount; i++)
+			{
+				Destroy(obstacleParent.transform.GetChild(i).gameObject);
+			}
+			
+			for (int i = 0; i < obstacleParent.transform.childCount; i++)
+				if (obstacleParent.transform.GetChild(i).gameObject.GetComponent<Transform>().position.magnitude < 5)
+					Destroy(obstacleParent.transform.GetChild(i).gameObject);
+		}
+
 		if (obstacleType == 0)
 		{
 			NumbOfObst = Random.Range((int)(range*range*density*(1-deviationPercent/100)), (int)(range*range*density*(1+deviationPercent/100)));
@@ -97,42 +109,7 @@ public class ObstacleGenerator : MonoBehaviour
     public void Start()
     {
 		obstacleParent = GameObject.Find("Obstacles");
-
-		for (int i = 0; i < obstacleParent.transform.childCount; i++)
-		{
-			Destroy(obstacleParent.transform.GetChild(i).gameObject);
-		}
 		
-		SpawnObstacles(Vector3.zero);
-
-		for (int i = 0; i < obstacleParent.transform.childCount; i++)
-			if (obstacleParent.transform.GetChild(i).gameObject.GetComponent<Transform>().position.magnitude < 5)
-				Destroy(obstacleParent.transform.GetChild(i).gameObject);
-		/*NumbOfObst = Random.Range((int)(range*range*density*(1-deviationPercent/100)), (int)(range*range*density*(1+deviationPercent/100)));
-		
-		GameObject primitive;
-		for (int i = 0; i < NumbOfObst; i++)
-		{
-			Vector3 pos;
-			Vector3 scale;
-			if (Random.Range(0,2) == 0)
-			{
-				primitive = GameObject.CreatePrimitive(PrimitiveType.Cube);
-				scale = new Vector3(Random.Range(minDimension, maxDimension), 3f, Random.Range(minDimension, maxDimension));
-				pos = new Vector3(Random.Range(-range, range), 1.5f, Random.Range(-range, range));
-			}
-			else
-			{
-				primitive = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-				float diam = Random.Range(minDimension, maxDimension);
-				scale = new Vector3(diam, 3f, diam);
-				pos = new Vector3(Random.Range(-range, range), 0, Random.Range(-range, range));
-			}
-			if (pos.magnitude < Mathf.Sqrt(scale.x*scale.x+scale.z*scale.z)+2.84f)
-				pos = pos.normalized * (Mathf.Sqrt(scale.x*scale.x+scale.z*scale.z)+2);
-			primitive.transform.localScale = scale;
-			primitive.transform.position = pos;
-			primitive.transform.parent = obstacleParent.transform;
-		}*/
+		//SpawnObstacles(Vector3.zero);
     }
 }
