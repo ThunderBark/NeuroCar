@@ -19,7 +19,6 @@ public class Brain : MonoBehaviour
 	public int sightAngle;						// Угол обзора машинки
 	public float thinkPeriod;					// Период активации мыслительного процесса
 	public List<int> numOfLayers;				// Кол-во элементов - кол-во скрытых слоев, значение элемента - кол-во нейронов в элементе(слое)	
-	[HideInInspector]
 	public float[][][] weights;
 	public float[][][] biases;
 	
@@ -40,7 +39,7 @@ public class Brain : MonoBehaviour
 	private int ignoreMask = 1<<8;
 	
 	// Другие внутренние параметры
-	private int maxNeuronCnt;
+	public int maxNeuronCnt;
 	
 	//////////////////////////////////////////////////////////////////////
 	// Расчет расстояний
@@ -149,14 +148,14 @@ public class Brain : MonoBehaviour
 		muscles.rightNdForce = y[1];
 	}
 	
-	float ActivationFunc(float[] x, float[] weight, float[] bias)
+	public float ActivationFunc(float[] x, float[] weight, float[] bias)
 	{
 		float y = 0.0f;
 		for (int i = 0; i < weight.Length; i++)
 		{
 			y += weight[i]*x[i] + bias[i];
 		}
-		return ReLU_mod(y, 1f);
+		return ReLU(y);
 	}
 	
 	///////////////////

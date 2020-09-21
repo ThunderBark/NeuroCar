@@ -867,7 +867,7 @@ MonoBehaviour:
   sightRange: 20
   sightAngle: 180
   thinkPeriod: 0.1
-  numOfLayers: 040000000300000002000000
+  numOfLayers: 050000000300000002000000
   maxWeight: 1
   minWeight: -1
   maxBias: 1
@@ -876,3 +876,4 @@ MonoBehaviour:
   turnCheck: 0
   turn: 0
   hitInfos: []
+  maxNeuronCnt: 0

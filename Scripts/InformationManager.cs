@@ -11,6 +11,7 @@ public class InformationManager : MonoBehaviour
 {
 	public GameObject plane;
     public GameObject menu;
+    public GameObject brainPathListShow;
     UniverseManager manager;
     ObstacleGenerator generator;
 
@@ -24,11 +25,18 @@ public class InformationManager : MonoBehaviour
     public Vector3 dragOrigin;
     public Vector3 mouse;
     StreamWriter stat;
+
+    public bool isFollowing;
+
+    public Transform trFollowing;
+
+    float prevSpeedOfTime = 0;
 	
     void Start()
     {
         manager = plane.GetComponent<UniverseManager>();
         generator = plane.GetComponent<ObstacleGenerator>();
+        isFollowing = false;
     }
 
     void OnGUI()
@@ -50,23 +58,11 @@ public class InformationManager : MonoBehaviour
 
         CheckKeys();
         if (manager.freeCam)
+        {
             FreeCamMode();
-    }
-
-    void CheckKeys()
-    {
-        if (Input.GetKey("escape"))
-            menu.SetActive(true);
-    }
-
-    public void Quit()
-    {
-        Application.Quit();
-    }
-
-    public void ToBeginning()
-    {
-        SceneManager.LoadScene("StartMenu");
+        }
+        else
+            isFollowing = false;
     }
 
     void WindowManager(int windowId)
@@ -129,27 +125,70 @@ public class InformationManager : MonoBehaviour
         
     }
     
+    public void Follow()
+    {
+        isFollowing = true;
+    }
+
     void FreeCamMode()
     {
         Vector3 pos = Vector3.zero;
         Vector3 util = Vector3.zero;
-        transform.position = Vector3.SmoothDamp(transform.position,
-                                            new Vector3 (transform.position.x,
-                                            transform.position.y + Input.mouseScrollDelta.y*(-4.0f) > 0 ? transform.position.y + Input.mouseScrollDelta.y*(-5.0f) : transform.position.y,
-                                            transform.position.z),
-                                            ref util, 0.05f, Mathf.Infinity, Time.unscaledDeltaTime);
 
+        // Изменение отдаления камеры
+        transform.position = Vector3.SmoothDamp(
+            transform.position,
+            new Vector3 (transform.position.x,
+            transform.position.y + Input.mouseScrollDelta.y*(-4.0f) > 0 ? transform.position.y + Input.mouseScrollDelta.y*(-5.0f) : transform.position.y,
+            transform.position.z),
+            ref util, 0.05f, Mathf.Infinity, Time.unscaledDeltaTime
+        );
+
+        // Изменение масштаба цели в зависимости от расстояния до камеры
         Transform tTarget = GameObject.Find("Target").GetComponent<Transform>();
         float tScale = transform.position.y*manager.targetScale/35.0f;
         tTarget.localScale = new Vector3(tScale, tScale, 1.0f);
         
+        // Проверка на начало Drag-передвижения камеры
         RaycastHit hit;
         if (Input.GetMouseButtonDown(2))
         {
+            isFollowing = false;
             mouse = Input.mousePosition;
-            if (Physics.Raycast(transform.position, Camera.main.ScreenPointToRay(Input.mousePosition).direction, out hit, Mathf.Infinity, 512))
+            if (Physics.Raycast(
+                    transform.position, 
+                    Camera.main.ScreenPointToRay(Input.mousePosition).direction, 
+                    out hit, Mathf.Infinity, 512))
                 dragOrigin = hit.point;
             return;
+        }
+
+        // Алготирм слежки за машинкой
+        if (isFollowing)
+            transform.position = Vector3.SmoothDamp(
+                transform.position,
+                new Vector3 (trFollowing.position.x, transform.position.y, trFollowing.position.z),
+                ref util, 0.05f, Mathf.Infinity, Time.unscaledDeltaTime
+            );
+            
+
+        // Проверка на выбор машинки для слежения
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (Physics.Raycast(transform.position, 
+                                Camera.main.ScreenPointToRay(Input.mousePosition).direction,
+                                out hit, Mathf.Infinity, 256))
+            {
+                if (hit.collider.transform.name == "Hull")
+                    trFollowing = hit.collider.transform;
+                else if (hit.collider.transform.name != "Plane" && hit.collider.transform.name != "Cube" && hit.collider.transform.name != "Cylinder")
+                    trFollowing = hit.collider.transform.parent.Find("./Hull").transform;
+                else
+                    return;
+                isFollowing = true;
+                GameObject.Find("Canvas/WeightsVisualisation").GetComponent<WeightVisualisation>().ShowBrain();
+                return;
+            }
         }
 
         if (!Input.GetMouseButton(2)) 
@@ -169,27 +208,25 @@ public class InformationManager : MonoBehaviour
 
     public string StatInit()
     {
-        /*
-            Желательно добавить инициализацию окон со статистикой в этом месте
-        //////////////
-            Также желательно поменять директорию, куда сохраняются логи
-        */
-        string time = DateTime.Now.ToString("HHmmss");
-        string date = DateTime.Now.ToString("yyyyMMdd");
         if (!Directory.Exists("./Logs/"))
             Directory.CreateDirectory("./Logs/");
-		string statPath = "./Logs/" + date + "_" + time  + "_log.txt";
+		string statPath = "./Logs/" + getStrDate_Time()  + "_log.txt";
         stat = new StreamWriter(statPath, false);
         stat.WriteLine("Generation bestFit avgFit fitGain");
         stat.Close();
         return statPath;
     }
 
+    public string getStrDate_Time()
+    {
+        string time = DateTime.Now.ToString("HHmmss");
+        string date = DateTime.Now.ToString("yyyyMMdd");
+        string str = date + "_" + time;
+        return str;
+    }
+
     public void StatWrite(string statPath, int genNum, int bestFit, int avgFit, int fitGain)
     {
-        /*
-            В этом месте добавить функционал отображения графиков на экране
-        */
 		stat = new StreamWriter(statPath, true);
         stat.Write(genNum.ToString() + " ");
         stat.Write(bestFit.ToString() + " ");
@@ -197,5 +234,43 @@ public class InformationManager : MonoBehaviour
         stat.Write(fitGain.ToString() + " ");
         stat.Write('\n');
         stat.Close();
+    }
+
+    void CheckKeys()
+    {
+        if (Input.GetKey("escape"))
+            menu.SetActive(true);
+
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            if (Time.timeScale != 0)
+            {
+                prevSpeedOfTime = Time.timeScale;
+                Time.timeScale = 0;
+            }
+            else
+            {
+                Time.timeScale = (prevSpeedOfTime == 0 ? 1 : prevSpeedOfTime);
+            }
+        }
+    }
+
+    public void Quit()
+    {
+        Application.Quit();
+    }
+
+    public void ToBeginning()
+    {
+        SceneManager.LoadScene("StartMenu");
+    }
+
+    public void ShowBrainPathSelect()
+    {
+        //Time.timeScale = 0;
+        brainPathListShow.SetActive(true);
+        brainPathListShow.GetComponent<RectTransform>().anchoredPosition = new Vector2(
+            Screen.width/2, Screen.height/2
+        );
     }
 }

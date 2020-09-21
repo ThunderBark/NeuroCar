@@ -27,6 +27,8 @@ public class WindowManager : MonoBehaviour
     {
         if (isFolded)
         {
+            windowRect.anchoredPosition = new Vector2(windowRect.anchoredPosition.x,
+                                                    windowRect.anchoredPosition.y - (windowHeight-headerHeight)/2);
             windowRect.sizeDelta = new Vector2(windowRect.sizeDelta.x, windowHeight);
             for (int i = 1; i < window.transform.childCount; i++)
                 window.transform.GetChild(i).gameObject.SetActive(true);
@@ -35,6 +37,8 @@ public class WindowManager : MonoBehaviour
         else
         {
             windowHeight = windowRect.sizeDelta.y;
+            windowRect.anchoredPosition = new Vector2(windowRect.anchoredPosition.x,
+                                                    windowRect.anchoredPosition.y + (windowHeight-headerHeight)/2);
             windowRect.sizeDelta = new Vector2(windowRect.sizeDelta.x, headerHeight);
             for (int i = 1; i < window.transform.childCount; i++)
                 window.transform.GetChild(i).gameObject.SetActive(false);

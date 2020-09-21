@@ -41,10 +41,6 @@ public class ObstacleGenerator : MonoBehaviour
 			{
 				Destroy(obstacleParent.transform.GetChild(i).gameObject);
 			}
-			
-			for (int i = 0; i < obstacleParent.transform.childCount; i++)
-				if (obstacleParent.transform.GetChild(i).gameObject.GetComponent<Transform>().position.magnitude < 5)
-					Destroy(obstacleParent.transform.GetChild(i).gameObject);
 		}
 
 		if (obstacleType == 0)
@@ -102,6 +98,12 @@ public class ObstacleGenerator : MonoBehaviour
 					primitive.transform.parent = obstacleParent.transform;
 				}
 			}
+		}
+		if (center == Vector3.zero)
+		{
+			for (int i = 0; i < obstacleParent.transform.childCount; i++)
+				if (obstacleParent.transform.GetChild(i).gameObject.GetComponent<Transform>().position.magnitude < 5)
+					Destroy(obstacleParent.transform.GetChild(i).gameObject);
 		}
 	}
 	

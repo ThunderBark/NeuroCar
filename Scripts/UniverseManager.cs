@@ -41,8 +41,8 @@ public class UniverseManager : MonoBehaviour
 	public bool generateObsNextGen;
 	public bool	enableGenerateObs;
 
-	int MutationType;
-	int CrossingoverType;	// Выбор типа кроссинговера: 0 - Деление отобранных особей
+	public int MutationType = 1;
+	public int CrossingoverType = 1;	// Выбор типа кроссинговера: 0 - Деление отобранных особей
 													  // 1 - Два родителя
 													  // 2 - Множество родителей
 	
@@ -70,6 +70,8 @@ public class UniverseManager : MonoBehaviour
 	public string str;
 	public string tstr;
 	public int deathGen;
+
+	public string tStr;
 	
 	
 	// Внутренние настройки
@@ -108,16 +110,19 @@ public class UniverseManager : MonoBehaviour
 		avgPrevGenScore = 0;
 		for (int i = 0; i < scaleOfGeneration; i++)
 		{	
-			scoreList[i] = brain[i].SCORE;
 			avgPrevGenScore += scoreList[i];
 			
 			if (isSurvived(i, scaleOfGeneration, minSurviveProb, maxSurviveProb))
+			{
 				if (parentCount+1 > maxSurvivorCnt)
 					brain[i].SCORE = 0;
 				else 
 					parentCount += 1;
+			}
 			else
 				brain[i].SCORE = 0;
+			scoreList[i] = brain[i].SCORE;
+
 		}
 		avgPrevGenScore /= (int)scoreList.Length;
 		gain = avgPrevGenScore - gain;
@@ -137,13 +142,13 @@ public class UniverseManager : MonoBehaviour
 		int parent = 0;
 		
 		// Тестовая версия выбора двух родителей
-		int parent1 = Random.Range(0, parentCount);
-		int parent2 = Random.Range(0, parentCount);
-		while (parent2 == parent1)
-			parent2 = Random.Range(0, parentCount);
+		/*while (parent2 == parent1)
+			parent2 = Random.Range(0, parentCount);*/
 
 		for (int i = parentCount; i < scaleOfGeneration; i++)
 		{
+			int parent1 = DonorNumber(parentCount);//Random.Range(0, parentCount);
+			int parent2 = DonorNumber(parentCount);//Random.Range(0, parentCount);
 			brain[i] = car[i].transform.GetChild(3).GetComponent<Brain>();
 			numOfConnections = brain[i].numOfEyes;
 			for (int k = 0; k < brain[i].numOfLayers.Count; k++)
@@ -153,20 +158,20 @@ public class UniverseManager : MonoBehaviour
 					for (int m = 0; m < numOfConnections; m++)
 					{
 						// Кроссинговер --------------------
-						if (CrossingoverType == 0)
+						if (CrossingoverType == 0)	// Деление
 						{
 							brain[i].weights[k][n][m] = brain[parent].weights[k][n][m];
 							brain[i].biases[k][n][m] = brain[parent].biases[k][n][m];
 						}
-						else if (CrossingoverType == 1)
+						else if (CrossingoverType == 1) // Два родителя
 						{
 							int pick = Random.Range(0,2);
 							brain[i].weights[k][n][m] = brain[pick>0 ? parent2:parent1].weights[k][n][m];
 							brain[i].biases[k][n][m] = brain[pick>0 ? parent2:parent1].biases[k][n][m];
 						}
-						else if (CrossingoverType == 2)
+						else if (CrossingoverType == 2) // Каждый ген от случайного
 						{
-							parent = DonorNumber(parentCount, winGenesSpreadRatio);
+							parent = DonorNumber(parentCount);
 							brain[i].weights[k][n][m] = brain[parent].weights[k][n][m];
 							brain[i].biases[k][n][m] = brain[parent].biases[k][n][m];
 						}
@@ -187,13 +192,14 @@ public class UniverseManager : MonoBehaviour
 					parent++;
 				else
 					parent = 0;
+			
 		}
 	}
 	
-	void StartNextGeneration()
+	public void StartNextGeneration()
 	{
 		// Сортировка бесполезных мозгов
-		CheckUselessBrains();
+		//CheckUselessBrains();
 		
 		// Процедура естественного отбора и размножения
 		NaturalSelection();
@@ -297,7 +303,7 @@ public class UniverseManager : MonoBehaviour
 		}
 	}
 	
-	 public void BigBang(bool isBrainLoad = false)
+	 public void BigBang(string brainPath = null)
 	{
 		// Сброс положений машинок
 		ResetCars();
@@ -310,8 +316,8 @@ public class UniverseManager : MonoBehaviour
 
 		// Если данный метод вызывается для загрузки мозга - загрузить его
 		// иначе заново инициализировать мозги
-		if (isBrainLoad)
-			ImportBrain();
+		if (brainPath != null && brainPath != "")
+			ImportBrain(brainPath);
 		else		
 		{
 			for (int i = 0; i < scaleOfGeneration; i++)
@@ -335,6 +341,7 @@ public class UniverseManager : MonoBehaviour
 		avgPrevGenScore = 0;
 		bestPrevGenScore = 0;
 		generationNumber = 0;
+		GameObject.Find("Canvas/Generation/Text").GetComponent<Text>().text = "Поколение: " + generationNumber;
 		statPath = infoManager.StatInit();
 		// Восстановление времени
 		startOfLastGeneration = Time.time;
@@ -342,10 +349,11 @@ public class UniverseManager : MonoBehaviour
 	//////////////////////////////////////////////////////////////////////////////////////////////////
     void Start()
     {
-		//ImportSettings();
+		Time.timeScale = 0;
 
 		// Инициализация
 		obsGenerator = this.GetComponent<ObstacleGenerator>();
+		ImportSettings();
 		scoreList = new int[scaleOfGeneration];
 		infoManager = bigBrother.GetComponent<InformationManager>();
 
@@ -363,7 +371,6 @@ public class UniverseManager : MonoBehaviour
 			enableGenerateObs = true;
 		}
 		obsGenerator.Start();
-
 
 		// Сброс положения конечной точки
 		ResetTarget(targetInCentre);
@@ -414,24 +421,33 @@ public class UniverseManager : MonoBehaviour
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 	float Mutate(float gene)
 	{
-		int MutationType = 0;				// Тип мутации:			0 - Полная замена гена на значение в интервале
+		//int MutationType = 0;				// Тип мутации:			0 - Полная замена гена на значение в интервале
 		if (MutationType == 0)									 // 1 - Изменение гена на значение
 			gene = Random.Range(-mutationRate, mutationRate);
-		//else if (MutationType == 1)
+		else if (MutationType == 1)
+		{
+			gene += Random.Range(-mutationRate, mutationRate);
+			if (gene > 1)
+				gene = 1;
+			else if (gene < -1)
+				gene = -1;
+		}
 		return gene;
 	}
 	
 	bool isSurvived(int i, int count, float min, float max)
 	{
-		float rand = Random.Range(0.0f, 100.0f);
-		if (rand < (i*(min-max)/count + max))
+		float rand = Random.Range(0.0f, 99.9f);
+		if (rand < (((i*(min-max))/count) + max))
 			return true;
+		/*int num = Random.Range(0, (int)Mathf.Exp(count));
+		num = count - Mathf.CeilToInt(Mathf.Log(num, Mathf.Exp(1)));*/
 		return false;
 	}
 	
-	int DonorNumber(int count, float prob)
+	int DonorNumber(int count)
 	{
-		int type = 0;
+		/*int type = 0;
 		if (type == 0)
 		{
 			if (prob == 100)
@@ -445,8 +461,10 @@ public class UniverseManager : MonoBehaviour
 				else
 					return i;
 			}
-		}
-		return 0;
+		}*/
+		int num = Random.Range(0, (int)Mathf.Exp(count));
+		num = count - Mathf.CeilToInt(Mathf.Log(num, Mathf.Exp(1)));
+		return num;
 	}
 	
 	bool isOcupated(int[] pos, int divX, int divZ)
@@ -473,9 +491,13 @@ public class UniverseManager : MonoBehaviour
 		return false;
 	}
 	
-	List<GameObject> SortCarsByScore(List<GameObject> cars)
+	List<GameObject> SortCarsByScore(List<GameObject> cars, bool isDescending = true)
 	{
-		cars = cars.OrderByDescending(GameObject => GameObject.transform.GetChild(3).GetComponent<Brain>().SCORE).ToList();
+		if (isDescending)
+			cars = cars.OrderByDescending(GameObject => GameObject.transform.GetChild(3).GetComponent<Brain>().SCORE).ToList();
+		else
+			cars = cars.OrderBy(GameObject => GameObject.transform.GetChild(3).GetComponent<Brain>().SCORE).ToList();
+
 		for (int i = 0; i < scaleOfGeneration; i++)
 		{
 			brain[i] = cars[i].transform.GetChild(3).GetComponent<Brain>();
@@ -489,7 +511,7 @@ public class UniverseManager : MonoBehaviour
 		{
 			Transform tHull;
 			Transform tTarget = GameObject.Find("Target").GetComponent<Transform>();
-			bool toTarget = tTarget.position == Vector3.up ? false : true;
+			bool toTarget = !targetInCentre;//tTarget.position == Vector3.up ? false : true;
 			for (int i = 0; i < scaleOfGeneration; i++)
 			{
 				tHull = car[i].transform.GetChild(3);
@@ -503,20 +525,20 @@ public class UniverseManager : MonoBehaviour
 				
 				int score = 0;
 				if (!toTarget)
-					score = (int)(maxRadVectM[i]*distanceImportance) + (int)(fullRotats[i]*rotationImportance);
+					score = (int)(travelDists[i]*100);//(int)(maxRadVectM[i]*distanceImportance) + (int)(fullRotats[i]*rotationImportance);
 				else 
 				{
 					Vector2 hullPos = new Vector2(tHull.position.x, tHull.position.z);
 					Vector2 targetPos = new Vector2(tTarget.position.x, tTarget.position.z);
-					Vector2 vTargetToRadius = (hullPos - targetPos).normalized * targetPos.magnitude;
+					score = (int)((hullPos - targetPos).magnitude*10);
+					score = 10000 - score;
+					/*Vector2 vTargetToRadius = (hullPos - targetPos).normalized * targetPos.magnitude;
 					score = (int)((vTargetToRadius - hullPos).magnitude);
-					maxScore[i] = score > maxScore[i] ?  score : maxScore[i];
+					maxScore[i] = score > maxScore[i] ?  score : maxScore[i];*/
 					//score = maxScore[i];
 				}
-				if ((Time.time - startOfLastGeneration > dumbBrainCheckTime) ? score > minScore : true)
+				if (score > brain[i].SCORE)
 					brain[i].SCORE = score;
-				else
-					brain[i].isDead = true;
 			}
 			lastCheck = Time.time;
 		}
@@ -585,15 +607,19 @@ public class UniverseManager : MonoBehaviour
 		}
 	}
 
-	public void SaveBestBrain()
+	public void SaveSelectedBrain()
 	{
-		string path = statPath.Remove(23) + "BestBrain.txt";
-		brain[0].Upload_Brain(path);
+		string dateTime = infoManager.getStrDate_Time();
+		Text brainName = GameObject.Find("Canvas/WeightsVisualisation/WinHeader/BrainName/Text").GetComponent<Text>();
+		string path = "./Logs/"+ dateTime + "_Brain" + brainName.text + ".txt";
+		Brain brain = infoManager.trFollowing.gameObject.GetComponent<Brain>();
+		if (brain != null)
+			brain.Upload_Brain(path);
 	}
 
-	public void ImportBrain()
+	public void ImportBrain(string brainPath)
 	{
-		StreamReader rd = new StreamReader("./BestBrain.txt");
+		StreamReader rd = new StreamReader(brainPath);
 		str = rd.ReadLine();
 		tstr = str.Substring(str.LastIndexOf(':')+2);
 		try
@@ -637,7 +663,7 @@ public class UniverseManager : MonoBehaviour
 			}
 		}
 
-		for (int i = 0; i < (brain.Count() > 3 ? 3:brain.Count()); i++)
+		for (int i = 0; i < brain.Count(); i++)
 		{
 			brain[i].weights = w;
 			brain[i].biases = b;
@@ -647,6 +673,19 @@ public class UniverseManager : MonoBehaviour
 	void ImportSettings()
 	{
 		StreamReader rd = new StreamReader("./Settings.txt");
+		tStr = rd.ReadLine();
+		obsGenerator.obstacleType = int.Parse(tStr);
+		if (obsGenerator.obstacleType == 2)
+			targetInCentre = true;
+		else
+			Object.Destroy(GameObject.Find("Track").gameObject);
+		tStr = rd.ReadLine();
+		CrossingoverType = int.Parse(tStr);
+		tStr = rd.ReadLine();
+		MutationType = int.Parse(tStr);
+		tStr = rd.ReadLine();
+		scaleOfGeneration = int.Parse(tStr);
+		rd.Close();
 	}
 
 	void SelfDestruct()
